@@ -8,6 +8,9 @@ const INDEX_PATH = path.join(__dirname, 'src/index.js');
 // dist路径
 const DIST_PATH = path.join(__dirname, 'dist');
 
+// 分离不同的css 文件
+const extractCSS = new ExtractTextPlugin('css/[name]-[contenthash:6].css');
+const extractLESS = new ExtractTextPlugin('css/[name]-[contenthash:6].css');
 
 // 判断生产环境
 const isProd = process.env.NODE_ENV === 'production';
@@ -45,17 +48,19 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ['style-loader', {
-          loader: 'css-loader',
-          options: {
-            modules: true, // 启用css-modules 模式， 默认false
-            importLoaders: 1, // 在css-loader前应用的 loader数，默认0
-          },
-        }, 'postcss-loader'],
+        use: extractCSS.extract(['css-loader', 'postcss-loader']),
+        // use: ['style-loader', {
+        //   loader: 'css-loader',
+        //   options: {
+        //     modules: true, // 启用css-modules 模式， 默认false
+        //     importLoaders: 1, // 在css-loader前应用的 loader数，默认0
+        //   },
+        // }, 'postcss-loader'],
       },
       {
         test: /\.less$/,
-        use: ['style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
+        use: extractLESS.extract(['css-loader', 'less-loader']),
+        // use: ['style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
       },
       {
         test: /\.(eot|woff|svg|ttf|woff2|gif|appcache)(\?|$)/,
@@ -106,6 +111,8 @@ module.exports = {
         },
       },
     }),
+    extractCSS,
+    extractLESS,
   ],
   resolve: {
     extensions: ['.js', '.jsx', '.css', '.less'],
