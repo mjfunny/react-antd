@@ -1,5 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
+const autoprefixer = require('autoprefixer');
 const ExtractTextPlugin = require('extract-text-webpack-plugin'); // 单独打包css
 const HtmlWebpackPlugin = require('html-webpack-plugin'); // 生成html
 
@@ -12,27 +13,39 @@ const DIST_PATH = path.join(__dirname, 'dist');
 const extractCSS = new ExtractTextPlugin('css/[name]-[contenthash:6].css');
 const extractLESS = new ExtractTextPlugin('css/[name]-[contenthash:6].css');
 
+// 第三方库
+const vendor = ['react',
+  'react-dom',
+  'react-redux',
+  'react-router',
+  'react-router-redux',
+  'redux',
+  'redux-saga',
+  'antd',
+];
+
 // 判断生产环境
 const isProd = process.env.NODE_ENV === 'production';
 console.log('环境', process.env.NODE_ENV, isProd);
 
 const entry = isProd ? {
-  main: INDEX_PATH,
-  react: 'react',
-  antd: 'antd',
-} : [
-  'webpack-dev-server/client?http://localhost:8080',
-  'webpack/hot/only-dev-server',
-  INDEX_PATH,
-];
-
+  app: INDEX_PATH,
+  vendor,
+} : {
+  app: [
+    'webpack-dev-server/client?http://localhost:8080',
+    'webpack/hot/only-dev-server',
+    INDEX_PATH,
+  ],
+  vendor,
+};
 const output = isProd ? {
   path: DIST_PATH,
   filename: 'js/[name].[chunkhash:6].min.js',
   publicPath: '/dist/',
 } : {
   path: DIST_PATH,
-  filename: 'js/[name].[chunkhash:6].js',
+  filename: '[name].[hash:6].js',
   publicPath: '/',
 };
 
@@ -48,19 +61,38 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: extractCSS.extract(['css-loader', 'postcss-loader']),
-        // use: ['style-loader', {
-        //   loader: 'css-loader',
-        //   options: {
-        //     modules: true, // 启用css-modules 模式， 默认false
-        //     importLoaders: 1, // 在css-loader前应用的 loader数，默认0
-        //   },
-        // }, 'postcss-loader'],
+        use: extractCSS.extract({
+          fallback: 'style-loader',
+          use: [{
+            loader: 'css-loader',
+            options: { // 启用css-modules 模式， 默认false
+              importLoaders: 1, // 在css-loader前应用的 loader数，默认0
+            },
+          }, {
+            loader: 'postcss-loader',
+            options: {
+              plugins: () => [autoprefixer],
+            },
+          }],
+        }),
       },
       {
         test: /\.less$/,
-        use: extractLESS.extract(['css-loader', 'less-loader']),
-        // use: ['style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
+        use: extractLESS.extract({
+          fallback: 'style-loader',
+          use: [{
+            loader: 'css-loader',
+            options: { // 启用css-modules 模式， 默认false
+              importLoaders: 2, // 在css-loader前应用的 loader数，默认0
+            },
+          }, {
+            loader: 'postcss-loader',
+            options: {
+              plugins: () => [autoprefixer],
+            },
+          }, 'less-loader'],
+        }),
+        // use: ['style-loader', 'css-loader', 'less-loader'],
       },
       {
         test: /\.(eot|woff|svg|ttf|woff2|gif|appcache)(\?|$)/,
@@ -95,21 +127,12 @@ module.exports = {
       filename: 'index.html',
       template: './src/index.html',
     }),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: ['common', 'react', 'antd', 'manifest'],
-      minChunks: 2,
-    }),
     new webpack.LoaderOptionsPlugin({
       minimize: true,
-      options: {
-        postcss: () => {
-          return [
-            require('autoprefixer')({
-              browsers: ['last 5 versions'],
-            }),
-          ];
-        },
-      },
+    }),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: ['common', 'vendor', 'manifest'],
+      minChunks: Infinity,
     }),
     extractCSS,
     extractLESS,
@@ -122,7 +145,7 @@ module.exports = {
 
 // 生产环境配置
 if (isProd) {
-  module.exports.devtool = 'source-map';
+  //module.exports.devtool = 'source-map';
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {
@@ -135,11 +158,11 @@ if (isProd) {
         warnings: false,
       },
     }),
+
   ]);
 } else {
   // 开发环境配置
   module.exports.devServer = {
-    hot: true,
     publicPath: '/',
     historyApiFallback: true,
     contentBase: path.join(__dirname, 'dist'),

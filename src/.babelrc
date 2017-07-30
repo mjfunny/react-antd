@@ -1,5 +1,7 @@
 {
-  "presets": [["es2015", { "modules": false }], "react"],
+  "presets": [
+    //  webpack 现在已经支持原生的 import 语句了,不需要再转为commonJS
+    ["es2015", { "modules": false }],"react"],
   "plugins": [
     "transform-runtime",
     ["import", { "libraryName": "antd", "style": "css" }]

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist",
-    "dev": "cross-env NODE_ENV=development webpack-dev-server",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --hot --inline",
     "build": "cross-env NODE_ENV=production webpack -p --progress --colors"
   },
   "repository": {
@@ -30,7 +30,7 @@
     "redux-saga": "^0.15.6"
   },
   "devDependencies": {
-    "autoprefix": "^1.0.1",
+    "autoprefixer": "^7.1.2",
     "babel": "^6.23.0",
     "babel-core": "^6.25.0",
     "babel-eslint": "^7.2.3",
