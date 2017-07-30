@@ -1,14 +1,20 @@
 import React from 'react';
-import { Button, Input } from 'antd';
 import ReactDOM from 'react-dom';
+import { hashHistory } from 'react-router';
+import { Provider } from 'react-redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { Route } from 'react-router';
+import { ConnectedRouter, routerReducer, routerMiddleware, push } from 'react-router-redux';
+import createSagaMiddleware from 'redux-saga';
+import reducers from './reducers';
+import sagas from './sagas';
 
-class MyComponent extends React.Component {
-  render() {
-    return <div className="app test">
-      <Button type="primary">按钮009</Button>
-      <Input />
-      </div>;
-  }
-}
+const hashMiddleware = routerMiddleware(hashHistory);
 
-ReactDOM.render(<MyComponent />, document.getElementById('root'));
+const store = createStore(
+  combineReducers({
+    ...reducers,
+    router: routerReducer,
+  }),
+  applyMiddleware(hashMiddleware, createSagaMiddleware(...sagas)),
+);
